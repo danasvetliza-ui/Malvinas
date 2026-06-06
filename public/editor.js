@@ -928,6 +928,147 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('preview-color3').style.backgroundColor = s.color3;
   }
 
+  // 11. Presets Logic (Save / Load / Delete)
+  const inputPresetName = document.getElementById('input-preset-name');
+  const btnSavePreset = document.getElementById('btn-save-preset');
+  const presetsContainer = document.getElementById('presets-container');
+
+  async function loadPresetsList() {
+    try {
+      const response = await fetch('/api/presets');
+      if (!response.ok) throw new Error('Failed to fetch presets');
+      const presets = await response.json();
+
+      if (presets.length === 0) {
+        presetsContainer.innerHTML = `<div class="layers-empty">No hay presets guardados.</div>`;
+        return;
+      }
+
+      presetsContainer.innerHTML = '';
+      presets.forEach(preset => {
+        const item = document.createElement('div');
+        item.className = 'layer-item';
+        item.innerHTML = `
+          <div class="layer-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <div class="layer-name" style="font-weight: 500;">${preset.name}</div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <!-- Load Button -->
+            <button class="btn btn-load-preset" data-file="${preset.filename}" style="padding: 4px 10px; font-size: 11px; height: 26px; flex: none;">
+              Cargar
+            </button>
+            <!-- Delete Button -->
+            <button class="layer-delete btn-delete-preset" data-file="${preset.filename}" title="Eliminar Preset" style="padding: 4px; flex: none; background: none; border: none; cursor: pointer;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </button>
+          </div>
+        `;
+
+        // Bind Load Event
+        item.querySelector('.btn-load-preset').addEventListener('click', async (e) => {
+          const file = e.target.dataset.file;
+          await loadPreset(file);
+        });
+
+        // Bind Delete Event
+        item.querySelector('.btn-delete-preset').addEventListener('click', async (e) => {
+          const btn = e.target.closest('button');
+          const file = btn.dataset.file;
+          if (confirm(`¿Estás seguro de que deseas eliminar el preset "${preset.name}"?`)) {
+            await deletePreset(file);
+          }
+        });
+
+        presetsContainer.appendChild(item);
+      });
+    } catch (err) {
+      console.error('Error loading presets list:', err);
+      presetsContainer.innerHTML = `<div class="layers-empty" style="color: var(--danger-color);">Error al cargar presets.</div>`;
+    }
+  }
+
+  async function loadPreset(filename) {
+    try {
+      const response = await fetch(`/api/presets/${filename}`);
+      if (!response.ok) throw new Error('Failed to load preset data');
+      const presetState = await response.json();
+
+      // Update state
+      state = presetState;
+      selectedLayerId = null;
+
+      // Sync views and controls
+      syncControlsToState();
+      renderer.updateState(state);
+      renderLayersList();
+      renderTransformPanel();
+
+      // Emit to all socket clients (other tabs, visualizer)
+      socket.emit('stateUpdate', state);
+      
+      console.log(`Loaded preset successfully: ${filename}`);
+    } catch (err) {
+      console.error('Error loading preset:', err);
+      alert('Error al cargar el preset seleccionado.');
+    }
+  }
+
+  async function deletePreset(filename) {
+    try {
+      const response = await fetch(`/api/presets/${filename}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Failed to delete preset');
+      
+      // Refresh list
+      await loadPresetsList();
+    } catch (err) {
+      console.error('Error deleting preset:', err);
+      alert('Error al eliminar el preset.');
+    }
+  }
+
+  // Bind Save Preset Button
+  btnSavePreset.addEventListener('click', async () => {
+    const name = inputPresetName.value.trim();
+    if (!name) {
+      alert('Por favor ingresa un nombre para el preset.');
+      inputPresetName.focus();
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/presets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: name,
+          state: state
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to save preset');
+      
+      // Reset input and refresh list
+      inputPresetName.value = '';
+      await loadPresetsList();
+      alert(`Preset "${name}" guardado con éxito.`);
+    } catch (err) {
+      console.error('Error saving preset:', err);
+      alert('Error al guardar el preset actual.');
+    }
+  });
+
+  // Load presets list on startup
+  loadPresetsList();
+
   // 12. Handle Resizing
   window.addEventListener('resize', () => {
     renderer.resize();

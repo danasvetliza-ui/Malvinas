@@ -1,0 +1,58 @@
+{
+  "shaderSettings": {
+    "noiseType": 1,
+    "scale": 3.5,
+    "speed": 0.5,
+    "warp": 1.2,
+    "detail": 3,
+    "color1": "#0a0515",
+    "color2": "#c2410c",
+    "color3": "#f6b426",
+    "brightness": 0,
+    "contrast": 1.3
+  },
+  "layers": [
+    {
+      "id": "sol_bandera",
+      "type": "shape",
+      "shapeType": "sun",
+      "name": "Sol de Mayo",
+      "x": 0,
+      "y": 0.15,
+      "scaleX": 1.2,
+      "scaleY": 1.2,
+      "rotation": 0,
+      "opacity": 0.95,
+      "blendMode": "screen",
+      "displacement": 0.08,
+      "fillColor": "#f6b426",
+      "fillColor2": "#f6b426",
+      "fillType": "solid",
+      "strokeColor": "#ffffff",
+      "strokeWidth": 0,
+      "visible": true
+    },
+    {
+      "id": "texto_honor",
+      "type": "text",
+      "name": "Texto: Honor y Gloria",
+      "text": "HONOR Y GLORIA",
+      "fontFamily": "Space Grotesk",
+      "fontSize": 56,
+      "textStyle": "bold",
+      "x": 0,
+      "y": -0.45,
+      "scaleX": 1.1,
+      "scaleY": 1.1,
+      "rotation": 0,
+      "opacity": 0.95,
+      "blendMode": "add",
+      "displacement": 0.12,
+      "textColor": "#f6b426",
+      "strokeColor": "#0a0515",
+      "strokeWidth": 4,
+      "textBgColor": "transparent",
+      "visible": true
+    }
+  ]
+}
