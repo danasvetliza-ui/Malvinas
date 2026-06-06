@@ -15,15 +15,16 @@ echo [2/3] Esperando que el servidor inicialice...
 timeout /t 2 /nobreak >nul
 
 echo.
-echo [3/3] Abriendo el Editor y el Visualizador en tu navegador...
+echo [3/3] Abriendo el Editor en tu navegador...
 start http://localhost:3000
-start http://localhost:3000/display
 
 echo.
 echo ====================================================
 echo  El editor se ha iniciado correctamente.
 echo  - Editor: http://localhost:3000
-echo  - Visualizador: http://localhost:3000/display
+echo.
+echo  * Puedes abrir el Visualizador desde el boton
+echo    "Abrir Visualizador" en la interfaz.
 echo.
 echo  * Para cerrar el servidor, cierra la ventana negra
 echo    que dice "Servidor - Malvinas Collage".
