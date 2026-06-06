@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Malvinas Collage - Homenaje 2 de Abril</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Socket.io and Three.js Libraries -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar Controls -->
+    <div class="sidebar">
+      
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        <div class="title-area">
+          <h1>2 DE ABRIL - MALVINAS</h1>
+          <div class="status-badge">
+            <span class="status-dot" id="socket-status-dot"></span>
+            <span id="socket-status-text">DISCONNECTED</span>
+          </div>
+        </div>
+        
+        <div class="action-bar">
+          <button class="btn btn-primary" id="btn-open-display">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+            </svg>
+            Abrir Visualizador
+          </button>
+        </div>
+      </div>
+      
+      <!-- Navigation Tabs -->
+      <div class="tabs">
+        <div class="tab active" data-tab="shader">Fondo Noise</div>
+        <div class="tab" data-tab="add-layer">Crear Capa</div>
+        <div class="tab" data-tab="layers-list">Capas Activas</div>
+        <div class="tab" data-tab="transform">Propiedades FX</div>
+      </div>
+      
+      <!-- Tab Content Area -->
+      <div class="tab-content">
+        
+        <!-- Tab 1: Shader Settings -->
+        <div class="tab-content-panel active" id="panel-shader">
+          <div class="control-section">
+            <h2 class="section-title">Generador de Ruido</h2>
+            
+            <div class="control-group">
+              <label for="noise-type">Algoritmo de Noise</label>
+              <select id="noise-type">
+                <option value="0">Simplex Noise 2D</option>
+                <option value="1">Worley / Cellular</option>
+                <option value="2">FBM (Fractal Brownian)</option>
+              </select>
+            </div>
+            
+            <div class="control-group" id="fbm-octaves-group" style="display: none;">
+              <div class="control-label-row">
+                <label for="noise-detail">Detalle FBM (Octavas)</label>
+                <span class="control-val" id="val-noise-detail">4.0</span>
+              </div>
+              <input type="range" id="noise-detail" min="1" max="6" step="1" value="4">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label-row">
+                <label for="noise-scale">Escala / Frecuencia</label>
+                <span class="control-val" id="val-noise-scale">2.5</span>
+              </div>
+              <input type="range" id="noise-scale" min="0.5" max="10" step="0.1" value="2.5">
+            </div>
+            
+            <div class="control-group">
+              <div class="control-label-row">
+                <label for="noise-speed">Velocidad Animación</label>
+                <span class="control-val" id="val-noise-speed">0.4</span>
+              </div>
+              <input type="range" id="noise-speed" min="0" max="2" step="0.05" value="0.4">
+            </div>
+            
+            <div class="control-group">
+              <div class="control-label-row">
+                <label for="noise-warp">Deformación (Domain Warp)</label>
+                <span class="control-val" id="val-noise-warp">0.5</span>
+              </div>
+              <input type="range" id="noise-warp" min="0" max="5" step="0.1" value="0.5">
+            </div>
+          </div>
+          
+          <div class="control-section">
+            <h2 class="section-title">Gradiente y Color</h2>
+            
+            <div class="color-picker-grid">
+              <div class="color-input-wrapper">
+                <div class="color-preview" id="preview-color1" style="background-color: #0d0221;"></div>
+                <input type="color" id="noise-color1" value="#0d0221">
+                <span class="color-label">Color 1</span>
+              </div>
+              <div class="color-input-wrapper">
+                <div class="color-preview" id="preview-color2" style="background-color: #0f4c5c;"></div>
+                <input type="color" id="noise-color2" value="#0f4c5c">
+                <span class="color-label">Color 2</span>
+              </div>
+              <div class="color-input-wrapper">
+                <div class="color-preview" id="preview-color3" style="background-color: #e36414;"></div>
+                <input type="color" id="noise-color3" value="#e36414">
+                <span class="color-label">Color 3</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-section">
+            <h2 class="section-title">Ajustes Finales</h2>
+            
+            <div class="control-group">
+              <div class="control-label-row">
+                <label for="noise-brightness">Brillo</label>
+                <span class="control-val" id="val-noise-brightness">0.0</span>
+              </div>
+              <input type="range" id="noise-brightness" min="-0.5" max="0.5" step="0.05" value="0.0">
+            </div>
+            
+            <div class="control-group">
+              <div class="control-label-row">
+                <label for="noise-contrast">Contraste</label>
+                <span class="control-val" id="val-noise-contrast">1.0</span>
+              </div>
+              <input type="range" id="noise-contrast" min="0.5" max="2" step="0.05" value="1.0">
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab 2: Create Layer -->
+        <div class="tab-content-panel" id="panel-add-layer">
+          <!-- Presets Malvinas -->
+          <div class="control-section" style="border: 1px solid rgba(0, 242, 254, 0.15); padding: 16px; border-radius: 12px; background: rgba(0, 242, 254, 0.02); margin-bottom: 16px;">
+            <h2 class="section-title" style="color: var(--accent-blue);">Presets Conmemorativos</h2>
+            
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Arma tu collage patrio en un clic:</div>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Background presets -->
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">Estilos de Fondo Shader</span>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                  <button class="btn btn-preset-bg" data-preset="mar" style="font-size: 11px; padding: 6px 4px;">Mar Patrio</button>
+                  <button class="btn btn-preset-bg" data-preset="fuego" style="font-size: 11px; padding: 6px 4px;">Llama Eterna</button>
+                  <button class="btn btn-preset-bg" data-preset="cielo" style="font-size: 11px; padding: 6px 4px;">Cielo Solemne</button>
+                </div>
+              </div>
+              
+              <!-- Shape presets -->
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">Elementos Gráficos</span>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                  <button class="btn btn-preset-layer" data-preset="islas-acuarela" style="font-size: 11px; padding: 6px 4px;">Islas Liquid</button>
+                  <button class="btn btn-preset-layer" data-preset="escarapela-neon" style="font-size: 11px; padding: 6px 4px;">Escarapela</button>
+                  <button class="btn btn-preset-layer" data-preset="sol-bandera" style="font-size: 11px; padding: 6px 4px;">Sol de Mayo</button>
+                </div>
+              </div>
+              
+              <!-- Text presets -->
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">Textos y Lemas</span>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                  <button class="btn btn-preset-layer" data-preset="texto-honor" style="font-size: 11px; padding: 6px 4px;">Honor y Gloria</button>
+                  <button class="btn btn-preset-layer" data-preset="texto-soberania" style="font-size: 11px; padding: 6px 4px;">Las Malvinas...</button>
+                  <button class="btn btn-preset-layer" data-preset="texto-heroes" style="font-size: 11px; padding: 6px 4px;">Héroes</button>
+                </div>
+              </div>
+
+              <!-- Web image presets -->
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">Imágenes Históricas (Web)</span>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+                  <button class="btn btn-preset-layer" data-preset="img-monumento" style="font-size: 11px; padding: 6px 4px;">Cenotafio Plaza San Martín</button>
+                  <button class="btn btn-preset-layer" data-preset="img-mapa" style="font-size: 11px; padding: 6px 4px;">Mapa de las Islas</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="control-section">
+            <h2 class="section-title">Insertar Elemento Personalizado</h2>
+            
+            <div class="layer-creator-grid">
+              <button class="btn-icon" id="btn-add-pc-image">
+                <svg viewBox="0 0 24 24">
+                  <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                </svg>
+                Imagen Local
+              </button>
+              
+              <button class="btn-icon" id="btn-add-web-image">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                </svg>
+                Imagen Web
+              </button>
+              
+              <button class="btn-icon" id="btn-add-shape">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 2L2 22h20L12 2z"/>
+                </svg>
+                Agregar Forma
+              </button>
+              
+              <button class="btn-icon" id="btn-add-text">
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 4v3h5.5v12h3V7H19V4H5z"/>
+                </svg>
+                Agregar Texto
+              </button>
+              
+              <button class="btn-icon" id="btn-add-texture" style="grid-column: span 2;">
+                <svg viewBox="0 0 24 24">
+                  <path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 20H4v-4h4v4zm0-6H4v-4h4v4zm0-6H4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4z"/>
+                </svg>
+                Textura Procedural (Patrón)
+              </button>
+            </div>
+            
+            <input type="file" id="file-uploader" accept="image/*" style="display: none;">
+          </div>
+        </div>
+        
+        <!-- Tab 3: Layers List -->
+        <div class="tab-content-panel" id="panel-layers-list">
+          <div class="control-section">
+            <div class="section-title">
+              <span>Capas Disponibles</span>
+              <span id="layer-count" style="font-family: var(--font-mono); font-size: 11px;">0</span>
+            </div>
+            
+            <div class="layers-list" id="layers-container">
+              <div class="layers-empty">Haz click en "Crear Capa" para comenzar a diseñar tu collage.</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab 4: Layer Transform & Shader FX -->
+        <div class="tab-content-panel" id="panel-transform">
+          <div class="layers-empty" id="transform-no-selection">
+            Selecciona una capa de la lista de "Capas Activas" para poder editar sus propiedades.
+          </div>
+          
+          <div id="transform-controls-wrapper" style="display: none;">
+            <div class="control-section">
+              <h2 class="section-title" id="selected-layer-title">Editar Capa</h2>
+              
+              <!-- Conditional text input (only if selected layer is text) -->
+              <div class="control-group" id="layer-prop-text-group" style="display: none;">
+                <label for="layer-prop-text">Contenido de Texto</label>
+                <input type="text" id="layer-prop-text" value="">
+              </div>
+              
+              <!-- Conditional shape selection (only if shape layer) -->
+              <div class="control-group" id="layer-prop-shape-group" style="display: none;">
+                <label for="layer-prop-shape-type">Tipo de Forma</label>
+                <select id="layer-prop-shape-type">
+                  <option value="rect">Rectángulo</option>
+                  <option value="circle">Círculo</option>
+                  <option value="triangle">Triángulo</option>
+                  <option value="star">Estrella</option>
+                  <option value="escarapela">Escarapela Argentina</option>
+                  <option value="sun">Sol de Mayo</option>
+                  <option value="malvinas">Silueta Malvinas</option>
+                </select>
+              </div>
+
+              <!-- Conditional texture pattern selection -->
+              <div class="control-group" id="layer-prop-texture-group" style="display: none;">
+                <label for="layer-prop-texture-type">Tipo de Patrón</label>
+                <select id="layer-prop-texture-type">
+                  <option value="grid">Grilla Lineal</option>
+                  <option value="noise">Ruido visual (Grano)</option>
+                  <option value="scanlines">Líneas CRT / Scanlines</option>
+                  <option value="dots">Halftone Dots</option>
+                </select>
+              </div>
+              
+              <!-- Shared Color picker for Text, Shapes, Textures -->
+              <div class="control-group" id="layer-prop-color-group" style="display: none;">
+                <label for="layer-prop-color">Color Principal</label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="color" id="layer-prop-color" value="#ffffff" style="width: 50px; height: 38px; border-radius: 8px; border: 1px solid var(--panel-border); background: none; cursor: pointer;">
+                  <input type="color" id="layer-prop-color2" value="#00f2fe" style="width: 50px; height: 38px; border-radius: 8px; border: 1px solid var(--panel-border); background: none; cursor: pointer;">
+                  <select id="layer-prop-fill-type" style="flex: 1;">
+                    <option value="solid">Sólido</option>
+                    <option value="gradient">Gradiente</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="control-section">
+              <h2 class="section-title">Transformación</h2>
+              
+              <div class="control-group">
+                <div class="control-label-row">
+                  <label for="layer-prop-x">Posición Horizontal (X)</label>
+                  <span class="control-val" id="val-layer-x">0.00</span>
+                </div>
+                <input type="range" id="layer-prop-x" min="-2.0" max="2.0" step="0.02" value="0">
+              </div>
+              
+              <div class="control-group">
+                <div class="control-label-row">
+                  <label for="layer-prop-y">Posición Vertical (Y)</label>
+                  <span class="control-val" id="val-layer-y">0.00</span>
+                </div>
+                <input type="range" id="layer-prop-y" min="-2.0" max="2.0" step="0.02" value="0">
+              </div>
+
+              <div class="control-group">
+                <div class="control-label-row">
+                  <label for="layer-prop-scale-x">Escala Ancho</label>
+                  <span class="control-val" id="val-layer-scale-x">1.00</span>
+                </div>
+                <input type="range" id="layer-prop-scale-x" min="0.1" max="4.0" step="0.05" value="1.0">
+              </div>
+              
+              <div class="control-group">
+                <div class="control-label-row">
+                  <label for="layer-prop-scale-y">Escala Alto</label>
+                  <span class="control-val" id="val-layer-scale-y">1.00</span>
+                </div>
+                <input type="range" id="layer-prop-scale-y" min="0.1" max="4.0" step="0.05" value="1.0">
+              </div>
+              
+              <div class="control-group">
+                <div class="control-label-row">
+                  <label for="layer-prop-rotation">Rotación (Grados)</label>
+                  <span class="control-val" id="val-layer-rotation">0°</span>
+                </div>
+                <input type="range" id="layer-prop-rotation" min="-180" max="180" step="1" value="0">
+              </div>
+            </div>
+            
+            <div class="control-section">
+              <h2 class="section-title">Efectos Shader (GLSL FX)</h2>
+              
+              <div class="control-group">
+                <div class="control-label-row">
+                  <label for="layer-prop-displacement" style="color: var(--accent-blue);">Distorsión por Shader Noise</label>
+                  <span class="control-val" id="val-layer-displacement" style="color: var(--accent-blue);">0.00</span>
+                </div>
+                <input type="range" id="layer-prop-displacement" min="0.0" max="2.0" step="0.02" value="0.0">
+              </div>
+              
+              <div class="control-group">
+                <div class="control-label-row">
+                  <label for="layer-prop-opacity">Opacidad</label>
+                  <span class="control-val" id="val-layer-opacity">1.00</span>
+                </div>
+                <input type="range" id="layer-prop-opacity" min="0.0" max="1.0" step="0.01" value="1.0">
+              </div>
+
+              <div class="control-group">
+                <label for="layer-prop-blend">Modo de Mezcla (Blending)</label>
+                <select id="layer-prop-blend">
+                  <option value="normal">Normal (Alpha Blending)</option>
+                  <option value="screen">Pantalla (Screen)</option>
+                  <option value="multiply">Multiplicar (Multiply)</option>
+                  <option value="add">Aditivo (Add)</option>
+                  <option value="sub">Sustractivo (Subtract)</option>
+                </select>
+              </div>
+
+              <div class="control-group">
+                <div class="control-label-row">
+                  <label for="layer-prop-tint-amount">Teñido de Color</label>
+                  <span class="control-val" id="val-layer-tint-amount">0%</span>
+                </div>
+                <input type="range" id="layer-prop-tint-amount" min="0" max="100" step="1" value="0">
+              </div>
+              
+              <div class="control-group" id="layer-prop-tint-color-wrapper">
+                <label for="layer-prop-tint-color">Color de Teñido</label>
+                <div class="color-input-wrapper" style="width: 100%; display: flex; flex-direction: row; justify-content: space-between; padding: 10px 14px;">
+                  <span class="color-label">Seleccionar Color</span>
+                  <div class="color-preview" id="preview-tint-color" style="background-color: #ffffff; width: 40px; height: 20px;"></div>
+                  <input type="color" id="layer-prop-tint-color" value="#ffffff">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <!-- Canvas Area -->
+    <div class="canvas-container">
+      <canvas id="canvas-3d"></canvas>
+      
+      <!-- Interactive Screen hint -->
+      <div class="canvas-hint">
+        <span>VISTA DE EDITOR</span> Los cambios se sincronizan en tiempo real
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Web Image URL -->
+  <div class="modal-overlay" id="modal-url">
+    <div class="modal-window">
+      <h3 class="modal-title">Cargar Imagen desde Web</h3>
+      <div class="control-group">
+        <label for="input-image-url">URL de la Imagen</label>
+        <input type="text" id="input-image-url" placeholder="https://ejemplo.com/imagen.jpg">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn" id="modal-url-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="modal-url-confirm">Agregar Capa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inject custom shader classes and execution files -->
+  <script src="shaders.js"></script>
+  <script src="collage-core.js"></script>
+  <script src="editor.js"></script>
+</body>
+</html>
