@@ -452,7 +452,7 @@ app.get('/api/presets', (req, res) => {
 // 2. GET: Get specific preset content
 app.get('/api/presets/:filename', (req, res) => {
   try {
-    const file = req.params.filename;
+    const file = path.basename(req.params.filename);
     const filePath = path.join(PRESETS_DIR, file);
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'Preset not found' });
